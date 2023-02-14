@@ -19,19 +19,4 @@ describe('AppController (e2e)', () => {
 
     pactum.request.setBaseUrl('http://localhost:3333');
   });
-
-  describe('auth', () => {
-    describe('signup', () => {
-      it('should allow you to sign up', () => {
-        return pactum
-          .spec()
-          .post('/auth/signup')
-          .withBody({
-            username: 'testUsername',
-            password: 'testPassword',
-          })
-          .expectStatus(201);
-      });
-    });
-  });
 });

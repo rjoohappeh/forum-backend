@@ -9,6 +9,10 @@ import { ForbiddenException } from '@nestjs/common';
 describe('AuthService', () => {
   let authService: AuthService;
   let prismaService: PrismaService;
+  const dto: AuthDto = {
+    email: 'test@email.com',
+    password: 'test123',
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,11 +26,6 @@ describe('AuthService', () => {
   });
 
   describe('signup', () => {
-    const dto: AuthDto = {
-      email: 'test@email.com',
-      password: 'test123',
-    };
-
     it('should succeed if email is unique', async () => {
       const result = await authService.signup(dto);
 
@@ -46,7 +45,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('should set hashedRt upon successfull signup', async () => {
+    it('should set hashedRt upon successful signup', async () => {
       await authService.signup(dto);
 
       const foundUser = await prismaService.user.findUnique({
@@ -60,11 +59,6 @@ describe('AuthService', () => {
   });
 
   describe('updateRtHash', () => {
-    const dto: AuthDto = {
-      email: 'test@email.com',
-      password: 'test123',
-    };
-
     it('should update hashedRt in db', async () => {
       const savedUser = await prismaService.user.create({
         data: {
