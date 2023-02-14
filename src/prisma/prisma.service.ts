@@ -17,6 +17,10 @@ export class PrismaService
     });
   }
 
+  cleanDb() {
+    return this.$transaction([this.user.deleteMany()]);
+  }
+
   onModuleInit() {
     this.$connect();
   }
