@@ -78,4 +78,44 @@ describe('AuthService', () => {
       expect(foundUser.hashedRt).not.toBeNull();
     });
   });
+
+  describe('signin', () => {
+    it('should throw Forbidden Exception if email does not exist', async () => {
+      await expect(() => authService.signin(dto)).rejects.toThrowError(
+        new ForbiddenException('Access Denied'),
+      );
+    });
+
+    it('should throw Forbidden Exception if password does not match', async () => {
+      await prismaService.user.create({
+        data: {
+          email: dto.email,
+          hash: dto.password,
+        },
+      });
+
+      const signInDto: AuthDto = {
+        email: dto.email,
+        password: 'Wrong password123',
+      };
+
+      await expect(() => authService.signin(signInDto)).rejects.toThrowError(
+        new ForbiddenException('Access Denied'),
+      );
+    });
+
+    it('should succeed if email and password match', async () => {
+      await prismaService.user.create({
+        data: {
+          email: dto.email,
+          hash: await authService.hashData(dto.password),
+        },
+      });
+
+      const result = await authService.signin(dto);
+
+      expect(result).toHaveProperty('access_token');
+      expect(result).toHaveProperty('refresh_token');
+    });
+  });
 });

@@ -30,11 +30,31 @@ export class AuthService {
     }
   }
 
-  async hashData(data: string) {
+  async signin(dto: AuthDto) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    if (user == null) {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    if (!bcrypt.compareSync(dto.password, user.hash)) {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.updateRtHash(user.id, tokens.refresh_token);
+    return tokens;
+  }
+
+  async hashData(data: string): Promise<string> {
     return bcrypt.hash(data, 10);
   }
 
-  async updateRtHash(userId: number, refreshToken: string) {
+  async updateRtHash(userId: number, refreshToken: string): Promise<void> {
     const hash = await this.hashData(refreshToken);
     await this.prisma.user.update({
       where: {
