@@ -90,7 +90,7 @@ describe('AuthService', () => {
       await prismaService.user.create({
         data: {
           email: dto.email,
-          hash: dto.password,
+          hash: await authService.hashData(dto.password),
         },
       });
 
