@@ -19,6 +19,8 @@ model User {
     hash String
     hashedRt    String?
 
+    active      Boolean @default(true)
+
     @@map("users")
 }
 

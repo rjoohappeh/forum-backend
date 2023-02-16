@@ -9,6 +9,8 @@ import { ForbiddenException } from '@nestjs/common';
 describe('AuthService', () => {
   let authService: AuthService;
   let prismaService: PrismaService;
+  let jwtService: JwtService;
+
   const dto: AuthDto = {
     email: 'test@email.com',
     password: 'test123',
@@ -21,6 +23,7 @@ describe('AuthService', () => {
 
     authService = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
+    jwtService = module.get<JwtService>(JwtService);
 
     await prismaService.cleanDb();
   });
@@ -116,6 +119,62 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('access_token');
       expect(result).toHaveProperty('refresh_token');
+    });
+  });
+
+  describe('deactivate account', () => {
+    it('should succeed if token belongs to same user as the provided email', async () => {
+      const savedUser = await prismaService.user.create({
+        data: {
+          email: dto.email,
+          hash: await authService.hashData(dto.password),
+        },
+      });
+
+      const token = await jwtService.signAsync(
+        {
+          sub: savedUser.id,
+          email: savedUser.email,
+        },
+        {
+          secret: 'at-secret',
+          expiresIn: 60 * 15,
+        },
+      );
+
+      await authService.deactivateAccount(savedUser.email, token);
+
+      const deactivatedUser = await prismaService.user.findUnique({
+        where: {
+          email: dto.email,
+        },
+      });
+
+      expect(deactivatedUser.active).toBeFalsy();
+    });
+
+    it('should throw a ForbiddenException if a token belonging to a different user is provided', async () => {
+      const savedUser = await prismaService.user.create({
+        data: {
+          email: dto.email,
+          hash: await authService.hashData(dto.password),
+        },
+      });
+
+      const token = await jwtService.signAsync(
+        {
+          sub: savedUser.id,
+          email: 'badEmail@email.com',
+        },
+        {
+          secret: 'at-secret',
+          expiresIn: 60 * 15,
+        },
+      );
+
+      await expect(() =>
+        authService.deactivateAccount(savedUser.email, token),
+      ).rejects.toThrow(new ForbiddenException('Access Denied'));
     });
   });
 });
