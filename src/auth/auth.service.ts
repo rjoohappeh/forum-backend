@@ -4,10 +4,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto';
 import { Tokens } from './types';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+    private config: ConfigService,
+  ) {}
 
   async signup(dto: AuthDto): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
@@ -115,7 +120,7 @@ export class AuthService {
           email: email,
         },
         {
-          secret: 'at-secret',
+          secret: this.config.get('AT_SECRET'),
           expiresIn: 60 * 15,
         },
       ),
@@ -125,7 +130,7 @@ export class AuthService {
           email: email,
         },
         {
-          secret: 'rt-secret',
+          secret: this.config.get('RT_SECRET'),
           expiresIn: 60 * 60 * 24 * 7,
         },
       ),

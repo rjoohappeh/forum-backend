@@ -13,6 +13,7 @@ describe('AppController (e2e)', () => {
   let prismaService: PrismaService;
   let authService: AuthService;
   let jwtService: JwtService;
+  let configService: ConfigService;
 
   const dto: AuthDto = {
     email: 'test@email.com',
@@ -36,6 +37,7 @@ describe('AppController (e2e)', () => {
     prismaService = app.get<PrismaService>(PrismaService);
     authService = app.get<AuthService>(AuthService);
     jwtService = app.get<JwtService>(JwtService);
+    configService = app.get<ConfigService>(ConfigService);
   });
 
   beforeEach(async () => {
@@ -157,7 +159,7 @@ describe('AppController (e2e)', () => {
             email: savedUser.email,
           },
           {
-            secret: 'at-secret',
+            secret: configService.get('AT_SECRET'),
             expiresIn: 60 * 15,
           },
         );
@@ -185,7 +187,7 @@ describe('AppController (e2e)', () => {
             email: 'badEmail@email.com',
           },
           {
-            secret: 'at-secret',
+            secret: configService.get('AT_SECRET'),
             expiresIn: 60 * 15,
           },
         );
@@ -226,7 +228,7 @@ describe('AppController (e2e)', () => {
             email: 'badEmail@email.com',
           },
           {
-            secret: 'at-secret',
+            secret: configService.get('AT_SECRET'),
             expiresIn: 60 * 15,
           },
         );

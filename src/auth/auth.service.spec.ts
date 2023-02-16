@@ -10,6 +10,7 @@ describe('AuthService', () => {
   let authService: AuthService;
   let prismaService: PrismaService;
   let jwtService: JwtService;
+  let configService: ConfigService;
 
   const dto: AuthDto = {
     email: 'test@email.com',
@@ -24,6 +25,7 @@ describe('AuthService', () => {
     authService = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
+    configService = module.get<ConfigService>(ConfigService);
 
     await prismaService.cleanDb();
   });
@@ -137,7 +139,7 @@ describe('AuthService', () => {
           email: savedUser.email,
         },
         {
-          secret: 'at-secret',
+          secret: configService.get('AT_SECRET'),
           expiresIn: 60 * 15,
         },
       );
@@ -167,7 +169,7 @@ describe('AuthService', () => {
           email: 'badEmail@email.com',
         },
         {
-          secret: 'at-secret',
+          secret: configService.get('AT_SECRET'),
           expiresIn: 60 * 15,
         },
       );
