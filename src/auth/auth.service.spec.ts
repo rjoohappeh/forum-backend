@@ -142,7 +142,7 @@ describe('AuthService', () => {
         },
       );
 
-      await authService.deactivateAccount(savedUser.email, token);
+      await authService.deactivate(savedUser.email, token);
 
       const deactivatedUser = await prismaService.user.findUnique({
         where: {
@@ -173,7 +173,7 @@ describe('AuthService', () => {
       );
 
       await expect(() =>
-        authService.deactivateAccount(savedUser.email, token),
+        authService.deactivate(savedUser.email, token),
       ).rejects.toThrow(new ForbiddenException('Access Denied'));
     });
   });

@@ -12,6 +12,7 @@ describe('AppController (e2e)', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
   let authService: AuthService;
+  let jwtService: JwtService;
 
   const dto: AuthDto = {
     email: 'test@email.com',
@@ -34,6 +35,7 @@ describe('AppController (e2e)', () => {
 
     prismaService = app.get<PrismaService>(PrismaService);
     authService = app.get<AuthService>(AuthService);
+    jwtService = app.get<JwtService>(JwtService);
   });
 
   beforeEach(async () => {
@@ -132,6 +134,82 @@ describe('AppController (e2e)', () => {
           .expectStatus(201)
           .expectBodyContains('access_token')
           .expectBodyContains('refresh_token');
+      });
+    });
+
+    describe('deactivate account', () => {
+      it('should succeed if token and email provided are associated', async () => {
+        const savedUser = await prismaService.user.create({
+          data: {
+            email: dto.email,
+            hash: await authService.hashData(dto.password),
+          },
+        });
+
+        const token = await jwtService.signAsync(
+          {
+            sub: savedUser.id,
+            email: savedUser.email,
+          },
+          {
+            secret: 'at-secret',
+            expiresIn: 60 * 15,
+          },
+        );
+
+        const body = {
+          email: dto.email,
+        };
+
+        return pactum
+          .spec()
+          .patch('/auth/deactivate')
+          .withBody(body)
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .expectStatus(200)
+          .expectBodyContains('test@email.com')
+          .expectBodyContains(false);
+      });
+
+      it('should return 403 if email provided does not match email in token', async () => {
+        const savedUser = await prismaService.user.create({
+          data: {
+            email: dto.email,
+            hash: await authService.hashData(dto.password),
+          },
+        });
+
+        const token = await jwtService.signAsync(
+          {
+            sub: savedUser.id,
+            email: 'badEmail@email.com',
+          },
+          {
+            secret: 'at-secret',
+            expiresIn: 60 * 15,
+          },
+        );
+
+        const body = {
+          email: dto.email,
+        };
+
+        const expectedBody = {
+          statusCode: 403,
+          message: 'Access Denied',
+          error: 'Forbidden',
+        };
+
+        return pactum
+          .spec()
+          .patch('/auth/deactivate')
+          .withBody(body)
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .expectBody(expectedBody);
       });
     });
   });

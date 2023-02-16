@@ -54,7 +54,7 @@ export class AuthService {
     return bcrypt.hash(data, 10);
   }
 
-  async deactivateAccount(email: string, token: string) {
+  async deactivate(email: string, token: string) {
     const decodedToken = this.jwtService.decode(token);
     if (decodedToken != null) {
       const tokenEmail = decodedToken['email'];
@@ -66,7 +66,7 @@ export class AuthService {
   }
 
   async deactivateUser(email: string) {
-    return this.prisma.user.update({
+    const deactivatedUser = await this.prisma.user.update({
       where: {
         email,
       },
@@ -74,6 +74,11 @@ export class AuthService {
         active: false,
       },
     });
+
+    delete deactivatedUser.hash;
+    delete deactivatedUser.hashedRt;
+
+    return deactivatedUser;
   }
   async updateRtHash(userId: number, refreshToken: string): Promise<void> {
     const hash = await this.hashData(refreshToken);
