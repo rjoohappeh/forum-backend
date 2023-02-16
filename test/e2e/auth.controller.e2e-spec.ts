@@ -55,6 +55,7 @@ describe('AppController (e2e)', () => {
             hash: dto.password,
           },
         });
+
         const expectedBody = {
           statusCode: 403,
           message: 'Credentials Taken',
@@ -138,14 +139,18 @@ describe('AppController (e2e)', () => {
     });
 
     describe('deactivate account', () => {
-      it('should succeed if token and email provided are associated', async () => {
-        const savedUser = await prismaService.user.create({
+      let savedUser;
+
+      beforeEach(async () => {
+        savedUser = await prismaService.user.create({
           data: {
             email: dto.email,
             hash: await authService.hashData(dto.password),
           },
         });
+      });
 
+      it('should succeed if token and email provided are associated', async () => {
         const token = await jwtService.signAsync(
           {
             sub: savedUser.id,
@@ -174,13 +179,6 @@ describe('AppController (e2e)', () => {
       });
 
       it('should return 403 if email provided does not match email in token', async () => {
-        const savedUser = await prismaService.user.create({
-          data: {
-            email: dto.email,
-            hash: await authService.hashData(dto.password),
-          },
-        });
-
         const token = await jwtService.signAsync(
           {
             sub: savedUser.id,
