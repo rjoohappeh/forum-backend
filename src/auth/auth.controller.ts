@@ -1,9 +1,18 @@
-import { Body, Controller, Param, Patch, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto';
 import { Request } from 'express';
 import { DeactivateDto } from './dto/deactivate.dto';
-import { Public } from '../common/decorators';
+import { GetCurrentUserId, Public } from '../common/decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -25,5 +34,11 @@ export class AuthController {
   deactivate(@Body() dto: DeactivateDto, @Req() req: Request) {
     const token = req.headers.authorization.split(' ')[1];
     return this.authService.deactivate(dto.email, token);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@GetCurrentUserId() userId: number) {
+    return this.authService.logout(userId);
   }
 }

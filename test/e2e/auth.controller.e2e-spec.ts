@@ -210,5 +210,35 @@ describe('AppController (e2e)', () => {
           .expectBody(expectedBody);
       });
     });
+
+    describe('logout', () => {
+      it('should return 200 if logout is successful', async () => {
+        const savedUser = await prismaService.user.create({
+          data: {
+            email: dto.email,
+            hash: await authService.hashData(dto.password),
+          },
+        });
+
+        const token = await jwtService.signAsync(
+          {
+            sub: savedUser.id,
+            email: 'badEmail@email.com',
+          },
+          {
+            secret: 'at-secret',
+            expiresIn: 60 * 15,
+          },
+        );
+
+        return pactum
+          .spec()
+          .post('/auth/logout')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .expectStatus(200);
+      });
+    });
   });
 });

@@ -80,6 +80,21 @@ export class AuthService {
 
     return deactivatedUser;
   }
+
+  async logout(userId: number) {
+    await this.prisma.user.updateMany({
+      where: {
+        id: userId,
+        hashedRt: {
+          not: null,
+        },
+      },
+      data: {
+        hashedRt: null,
+      },
+    });
+  }
+
   async updateRtHash(userId: number, refreshToken: string): Promise<void> {
     const hash = await this.hashData(refreshToken);
     await this.prisma.user.update({

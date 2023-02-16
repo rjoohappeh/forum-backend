@@ -177,4 +177,25 @@ describe('AuthService', () => {
       ).rejects.toThrow(new ForbiddenException('Access Denied'));
     });
   });
+
+  describe('logout', () => {
+    it('should set hashedRt to null', async () => {
+      const { id } = await prismaService.user.create({
+        data: {
+          email: dto.email,
+          hash: dto.password,
+        },
+      });
+
+      await authService.logout(id);
+
+      const foundUser = await prismaService.user.findUnique({
+        where: {
+          email: dto.email,
+        },
+      });
+
+      expect(foundUser.hashedRt).toBeNull();
+    });
+  });
 });
