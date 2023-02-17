@@ -5,6 +5,7 @@ import { AuthDto } from './dto';
 import { Tokens } from './types';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -59,7 +60,11 @@ export class AuthService {
     return bcrypt.hash(data, 10);
   }
 
-  async setActive(email: string, token: string, active: boolean) {
+  async setActive(
+    email: string,
+    token: string,
+    active: boolean,
+  ): Promise<User> {
     const decodedToken = this.jwtService.decode(token);
     if (decodedToken != null) {
       const tokenEmail = decodedToken['email'];
@@ -70,7 +75,7 @@ export class AuthService {
     throw new ForbiddenException('Access Denied');
   }
 
-  async updateActive(email: string, active: boolean) {
+  async updateActive(email: string, active: boolean): Promise<User> {
     const deactivatedUser = await this.prisma.user.update({
       where: {
         email,
@@ -86,7 +91,7 @@ export class AuthService {
     return deactivatedUser;
   }
 
-  async logout(userId: number) {
+  async logout(userId: number): Promise<void> {
     await this.prisma.user.updateMany({
       where: {
         id: userId,
@@ -112,7 +117,7 @@ export class AuthService {
     });
   }
 
-  async getTokens(userId: number, email: string) {
+  async getTokens(userId: number, email: string): Promise<Tokens> {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
         {
