@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsString } from 'class-validator';
 
-export class DeactivateDto {
+export class SetActiveDto {
   @IsNotEmpty()
   @IsString()
   email: string;

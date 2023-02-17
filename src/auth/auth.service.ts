@@ -59,24 +59,24 @@ export class AuthService {
     return bcrypt.hash(data, 10);
   }
 
-  async deactivate(email: string, token: string) {
+  async setActive(email: string, token: string, active: boolean) {
     const decodedToken = this.jwtService.decode(token);
     if (decodedToken != null) {
       const tokenEmail = decodedToken['email'];
       if (email === tokenEmail) {
-        return await this.deactivateUser(email);
+        return await this.updateActive(email, active);
       }
     }
     throw new ForbiddenException('Access Denied');
   }
 
-  async deactivateUser(email: string) {
+  async updateActive(email: string, active: boolean) {
     const deactivatedUser = await this.prisma.user.update({
       where: {
         email,
       },
       data: {
-        active: false,
+        active,
       },
     });
 

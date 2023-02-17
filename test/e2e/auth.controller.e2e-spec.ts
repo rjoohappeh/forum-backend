@@ -140,7 +140,7 @@ describe('AppController (e2e)', () => {
       });
     });
 
-    describe('deactivate account', () => {
+    describe('set account active/inactive', () => {
       let savedUser;
 
       beforeEach(async () => {
@@ -152,65 +152,74 @@ describe('AppController (e2e)', () => {
         });
       });
 
-      it('should succeed if token and email provided are associated', async () => {
-        const token = await jwtService.signAsync(
-          {
-            sub: savedUser.id,
-            email: savedUser.email,
-          },
-          {
-            secret: configService.get('AT_SECRET'),
-            expiresIn: 60 * 15,
-          },
-        );
+      it.each([
+        ['/auth/deactivate', false],
+        ['/auth/activate', true],
+      ])(
+        'should succeed if token and email provided are associated',
+        async (requestPath: string, active: boolean) => {
+          const token = await jwtService.signAsync(
+            {
+              sub: savedUser.id,
+              email: savedUser.email,
+            },
+            {
+              secret: configService.get('AT_SECRET'),
+              expiresIn: 60 * 15,
+            },
+          );
 
-        const body = {
-          email: dto.email,
-        };
+          const body = {
+            email: dto.email,
+          };
 
-        return pactum
-          .spec()
-          .patch('/auth/deactivate')
-          .withBody(body)
-          .withHeaders({
-            Authorization: `Bearer ${token}`,
-          })
-          .expectStatus(200)
-          .expectBodyContains('test@email.com')
-          .expectBodyContains(false);
-      });
+          return pactum
+            .spec()
+            .patch(requestPath)
+            .withBody(body)
+            .withHeaders({
+              Authorization: `Bearer ${token}`,
+            })
+            .expectStatus(200)
+            .expectBodyContains('test@email.com')
+            .expectBodyContains(active);
+        },
+      );
 
-      it('should return 403 if email provided does not match email in token', async () => {
-        const token = await jwtService.signAsync(
-          {
-            sub: savedUser.id,
-            email: 'badEmail@email.com',
-          },
-          {
-            secret: configService.get('AT_SECRET'),
-            expiresIn: 60 * 15,
-          },
-        );
+      it.each([['/auth/deactivate'], ['/auth/activate']])(
+        'should return 403 if email provided does not match email in token',
+        async (requestPath: string) => {
+          const token = await jwtService.signAsync(
+            {
+              sub: savedUser.id,
+              email: 'badEmail@email.com',
+            },
+            {
+              secret: configService.get('AT_SECRET'),
+              expiresIn: 60 * 15,
+            },
+          );
 
-        const body = {
-          email: dto.email,
-        };
+          const body = {
+            email: dto.email,
+          };
 
-        const expectedBody = {
-          statusCode: 403,
-          message: 'Access Denied',
-          error: 'Forbidden',
-        };
+          const expectedBody = {
+            statusCode: 403,
+            message: 'Access Denied',
+            error: 'Forbidden',
+          };
 
-        return pactum
-          .spec()
-          .patch('/auth/deactivate')
-          .withBody(body)
-          .withHeaders({
-            Authorization: `Bearer ${token}`,
-          })
-          .expectBody(expectedBody);
-      });
+          return pactum
+            .spec()
+            .patch(requestPath)
+            .withBody(body)
+            .withHeaders({
+              Authorization: `Bearer ${token}`,
+            })
+            .expectBody(expectedBody);
+        },
+      );
     });
 
     describe('logout', () => {

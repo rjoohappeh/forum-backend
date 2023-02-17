@@ -124,36 +124,39 @@ describe('AuthService', () => {
     });
   });
 
-  describe('deactivate account', () => {
-    it('should succeed if token belongs to same user as the provided email', async () => {
-      const savedUser = await prismaService.user.create({
-        data: {
-          email: dto.email,
-          hash: await authService.hashData(dto.password),
-        },
-      });
+  describe('set account active/inactive', () => {
+    it.each([[false], [true]])(
+      'should succeed if token belongs to same user as the provided email',
+      async (active: boolean) => {
+        const savedUser = await prismaService.user.create({
+          data: {
+            email: dto.email,
+            hash: await authService.hashData(dto.password),
+          },
+        });
 
-      const token = await jwtService.signAsync(
-        {
-          sub: savedUser.id,
-          email: savedUser.email,
-        },
-        {
-          secret: configService.get('AT_SECRET'),
-          expiresIn: 60 * 15,
-        },
-      );
+        const token = await jwtService.signAsync(
+          {
+            sub: savedUser.id,
+            email: savedUser.email,
+          },
+          {
+            secret: configService.get('AT_SECRET'),
+            expiresIn: 60 * 15,
+          },
+        );
 
-      await authService.deactivate(savedUser.email, token);
+        await authService.setActive(savedUser.email, token, active);
 
-      const deactivatedUser = await prismaService.user.findUnique({
-        where: {
-          email: dto.email,
-        },
-      });
+        const deactivatedUser = await prismaService.user.findUnique({
+          where: {
+            email: dto.email,
+          },
+        });
 
-      expect(deactivatedUser.active).toBeFalsy();
-    });
+        expect(deactivatedUser.active).toBe(active);
+      },
+    );
 
     it('should throw a ForbiddenException if a token belonging to a different user is provided', async () => {
       const savedUser = await prismaService.user.create({
@@ -175,7 +178,7 @@ describe('AuthService', () => {
       );
 
       await expect(() =>
-        authService.deactivate(savedUser.email, token),
+        authService.setActive(savedUser.email, token, false),
       ).rejects.toThrow(new ForbiddenException('Access Denied'));
     });
   });

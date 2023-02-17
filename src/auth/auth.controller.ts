@@ -11,7 +11,7 @@ import {
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto';
 import { Request } from 'express';
-import { DeactivateDto } from './dto/deactivate.dto';
+import { SetActiveDto } from './dto/deactivate.dto';
 import { GetCurrentUserId, Public } from '../common/decorators';
 
 @Controller('auth')
@@ -30,13 +30,19 @@ export class AuthController {
     return this.authService.signin(dto);
   }
 
-  @Patch('deactivate')
-  deactivate(@Body() dto: DeactivateDto, @Req() req: Request) {
+  @Patch('/deactivate')
+  deactivate(@Body() dto: SetActiveDto, @Req() req: Request) {
     const token = req.headers.authorization.split(' ')[1];
-    return this.authService.deactivate(dto.email, token);
+    return this.authService.setActive(dto.email, token, false);
   }
 
-  @Post('logout')
+  @Patch('/activate')
+  activate(@Body() dto: SetActiveDto, @Req() req: Request) {
+    const token = req.headers.authorization.split(' ')[1];
+    return this.authService.setActive(dto.email, token, true);
+  }
+
+  @Post('/logout')
   @HttpCode(HttpStatus.OK)
   logout(@GetCurrentUserId() userId: number) {
     return this.authService.logout(userId);
