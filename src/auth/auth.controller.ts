@@ -3,16 +3,17 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  Param,
   Patch,
   Post,
-  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto';
-import { Request } from 'express';
 import { SetActiveDto } from './dto/deactivate.dto';
-import { GetCurrentUserId, Public } from '../common/decorators';
+import {
+  GetCurrentUserId,
+  GetRequestToken,
+  Public,
+} from '../common/decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -31,14 +32,12 @@ export class AuthController {
   }
 
   @Patch('/deactivate')
-  deactivate(@Body() dto: SetActiveDto, @Req() req: Request) {
-    const token = req.headers.authorization.split(' ')[1];
+  deactivate(@Body() dto: SetActiveDto, @GetRequestToken() token: string) {
     return this.authService.setActive(dto.email, token, false);
   }
 
   @Patch('/activate')
-  activate(@Body() dto: SetActiveDto, @Req() req: Request) {
-    const token = req.headers.authorization.split(' ')[1];
+  activate(@Body() dto: SetActiveDto, @GetRequestToken() token: string) {
     return this.authService.setActive(dto.email, token, true);
   }
 
