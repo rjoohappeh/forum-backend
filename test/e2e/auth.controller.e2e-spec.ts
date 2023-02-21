@@ -171,6 +171,7 @@ describe('AppController (e2e)', () => {
 
           const body = {
             email: dto.email,
+            password: dto.password,
           };
 
           return pactum
@@ -202,6 +203,7 @@ describe('AppController (e2e)', () => {
 
           const body = {
             email: dto.email,
+            password: dto.password,
           };
 
           const expectedBody = {

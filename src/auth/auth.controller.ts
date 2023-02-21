@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto';
-import { SetActiveDto } from './dto/deactivate.dto';
 import {
   GetCurrentUserId,
   GetRequestToken,
@@ -32,13 +31,13 @@ export class AuthController {
   }
 
   @Patch('/deactivate')
-  deactivate(@Body() dto: SetActiveDto, @GetRequestToken() token: string) {
-    return this.authService.setActive(dto.email, token, false);
+  deactivate(@Body() dto: AuthDto, @GetRequestToken() token: string) {
+    return this.authService.setActive(dto, token, false);
   }
 
   @Patch('/activate')
-  activate(@Body() dto: SetActiveDto, @GetRequestToken() token: string) {
-    return this.authService.setActive(dto.email, token, true);
+  activate(@Body() dto: AuthDto, @GetRequestToken() token: string) {
+    return this.authService.setActive(dto, token, true);
   }
 
   @Post('/logout')

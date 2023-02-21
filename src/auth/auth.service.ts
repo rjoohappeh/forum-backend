@@ -60,16 +60,27 @@ export class AuthService {
     return bcrypt.hash(data, 10);
   }
 
-  async setActive(
-    email: string,
-    token: string,
-    active: boolean,
-  ): Promise<User> {
+  async setActive(dto: AuthDto, token: string, active: boolean): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    if (user == null) {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    console.log(bcrypt.compareSync(dto.password, user.hash));
+    if (!bcrypt.compareSync(dto.password, user.hash)) {
+      throw new ForbiddenException('Access Denied');
+    }
+
     const decodedToken = this.jwtService.decode(token);
     if (decodedToken != null) {
       const tokenEmail = decodedToken['email'];
-      if (email === tokenEmail) {
-        return await this.updateActive(email, active);
+      if (dto.email === tokenEmail) {
+        return await this.updateActive(dto.email, active);
       }
     }
     throw new ForbiddenException('Access Denied');
