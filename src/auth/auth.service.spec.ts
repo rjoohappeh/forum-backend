@@ -5,11 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException } from '@nestjs/common';
+import { UserService } from '../prisma/user/user.service';
 
 describe('AuthService', () => {
   let authService: AuthService;
-  let prismaService: PrismaService;
   let jwtService: JwtService;
+  let prismaService: PrismaService;
+  let userService: UserService;
   let configService: ConfigService;
 
   const dto: AuthDto = {
@@ -19,11 +21,18 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthService, PrismaService, ConfigService, JwtService],
+      providers: [
+        AuthService,
+        UserService,
+        PrismaService,
+        ConfigService,
+        JwtService,
+      ],
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
+    userService = module.get<UserService>(UserService);
     jwtService = module.get<JwtService>(JwtService);
     configService = module.get<ConfigService>(ConfigService);
 
@@ -39,12 +48,11 @@ describe('AuthService', () => {
     });
 
     it('should not succeed if email is not unique', async () => {
-      await prismaService.user.create({
-        data: {
-          email: dto.email,
-          hash: dto.password,
-        },
+      await userService.createUser({
+        email: dto.email,
+        hash: dto.password,
       });
+
       await expect(() => authService.signup(dto)).rejects.toThrowError(
         new ForbiddenException('Credentials Taken'),
       );
@@ -65,12 +73,11 @@ describe('AuthService', () => {
 
   describe('updateRtHash', () => {
     it('should update hashedRt in db', async () => {
-      const savedUser = await prismaService.user.create({
-        data: {
-          email: dto.email,
-          hash: dto.password,
-        },
+      const savedUser = await userService.createUser({
+        email: dto.email,
+        hash: dto.password,
       });
+
       const refreshToken = 'fakeToken';
       await authService.updateRtHash(savedUser.id, refreshToken);
 
@@ -92,11 +99,9 @@ describe('AuthService', () => {
     });
 
     it('should throw Forbidden Exception if password does not match', async () => {
-      await prismaService.user.create({
-        data: {
-          email: dto.email,
-          hash: await authService.hashData(dto.password),
-        },
+      await userService.createUser({
+        email: dto.email,
+        hash: await authService.hashData(dto.password),
       });
 
       const signInDto: AuthDto = {
@@ -110,11 +115,9 @@ describe('AuthService', () => {
     });
 
     it('should succeed if email and password match', async () => {
-      await prismaService.user.create({
-        data: {
-          email: dto.email,
-          hash: await authService.hashData(dto.password),
-        },
+      await userService.createUser({
+        email: dto.email,
+        hash: await authService.hashData(dto.password),
       });
 
       const result = await authService.signin(dto);
@@ -128,11 +131,9 @@ describe('AuthService', () => {
     it.each([[false], [true]])(
       'should succeed if token belongs to same user as the provided email',
       async (active: boolean) => {
-        const savedUser = await prismaService.user.create({
-          data: {
-            email: dto.email,
-            hash: await authService.hashData(dto.password),
-          },
+        const savedUser = await userService.createUser({
+          email: dto.email,
+          hash: await authService.hashData(dto.password),
         });
 
         const token = await jwtService.signAsync(
@@ -148,22 +149,18 @@ describe('AuthService', () => {
 
         await authService.setActive(dto, token, active);
 
-        const deactivatedUser = await prismaService.user.findUnique({
-          where: {
-            email: dto.email,
-          },
-        });
+        const deactivatedUser = await userService.getUserByEmail(
+          savedUser.email,
+        );
 
         expect(deactivatedUser.active).toBe(active);
       },
     );
 
     it('should throw a ForbiddenException if a token belonging to a different user is provided', async () => {
-      const savedUser = await prismaService.user.create({
-        data: {
-          email: dto.email,
-          hash: await authService.hashData(dto.password),
-        },
+      const savedUser = await userService.createUser({
+        email: dto.email,
+        hash: await authService.hashData(dto.password),
       });
 
       const token = await jwtService.signAsync(
@@ -185,11 +182,9 @@ describe('AuthService', () => {
 
   describe('logout', () => {
     it('should set hashedRt to null', async () => {
-      const { id } = await prismaService.user.create({
-        data: {
-          email: dto.email,
-          hash: dto.password,
-        },
+      const { id } = await userService.createUser({
+        email: dto.email,
+        hash: dto.password,
       });
 
       await authService.logout(id);

@@ -6,11 +6,13 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AtGuard } from './auth/guards/at.guard';
+import { UserModule } from './prisma/user/prisma.module';
 
 @Module({
   imports: [
     AuthModule,
     PrismaModule,
+    UserModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

@@ -1,29 +1,28 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto';
-import { Tokens } from './types';
+import { CreateUserDto, Tokens } from './types';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
+import { UserService } from '../prisma/user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
+    private userService: UserService,
     private jwtService: JwtService,
     private config: ConfigService,
   ) {}
 
   async signup(dto: AuthDto): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
+    const createUserDto: CreateUserDto = {
+      email: dto.email,
+      hash,
+    };
     try {
-      const newUser = await this.prisma.user.create({
-        data: {
-          email: dto.email,
-          hash,
-        },
-      });
+      const newUser = await this.userService.createUser(createUserDto);
 
       const tokens = await this.getTokens(newUser.id, newUser.email);
       await this.updateRtHash(newUser.id, tokens.refresh_token);
@@ -37,11 +36,7 @@ export class AuthService {
   }
 
   async signin(dto: AuthDto): Promise<Tokens> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email: dto.email,
-      },
-    });
+    const user = await this.userService.getUserByEmail(dto.email);
 
     if (user == null) {
       throw new ForbiddenException('Access Denied');
@@ -61,17 +56,12 @@ export class AuthService {
   }
 
   async setActive(dto: AuthDto, token: string, active: boolean): Promise<User> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        email: dto.email,
-      },
-    });
+    const user = await this.userService.getUserByEmail(dto.email);
 
     if (user == null) {
       throw new ForbiddenException('Access Denied');
     }
 
-    console.log(bcrypt.compareSync(dto.password, user.hash));
     if (!bcrypt.compareSync(dto.password, user.hash)) {
       throw new ForbiddenException('Access Denied');
     }
@@ -87,14 +77,12 @@ export class AuthService {
   }
 
   async updateActive(email: string, active: boolean): Promise<User> {
-    const deactivatedUser = await this.prisma.user.update({
-      where: {
-        email,
-      },
-      data: {
+    const deactivatedUser = await this.userService.updateUser(
+      { email },
+      {
         active,
       },
-    });
+    );
 
     delete deactivatedUser.hash;
     delete deactivatedUser.hashedRt;
@@ -103,29 +91,12 @@ export class AuthService {
   }
 
   async logout(userId: number): Promise<void> {
-    await this.prisma.user.updateMany({
-      where: {
-        id: userId,
-        hashedRt: {
-          not: null,
-        },
-      },
-      data: {
-        hashedRt: null,
-      },
-    });
+    await this.userService.logoutUser(userId);
   }
 
   async updateRtHash(userId: number, refreshToken: string): Promise<void> {
     const hash = await this.hashData(refreshToken);
-    await this.prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        hashedRt: hash,
-      },
-    });
+    await this.userService.updateUser({ id: userId }, { hashedRt: hash });
   }
 
   async getTokens(userId: number, email: string): Promise<Tokens> {
