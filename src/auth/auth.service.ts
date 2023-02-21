@@ -38,13 +38,7 @@ export class AuthService {
   async signin(dto: AuthDto): Promise<Tokens> {
     const user = await this.userService.getUserByEmail(dto.email);
 
-    if (user == null) {
-      throw new ForbiddenException('Access Denied');
-    }
-
-    if (!bcrypt.compareSync(dto.password, user.hash)) {
-      throw new ForbiddenException('Access Denied');
-    }
+    this.validateUserData(user, dto.password);
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
@@ -55,16 +49,20 @@ export class AuthService {
     return bcrypt.hash(data, 10);
   }
 
-  async setActive(dto: AuthDto, token: string, active: boolean): Promise<User> {
-    const user = await this.userService.getUserByEmail(dto.email);
-
+  validateUserData(user: User, password: string) {
     if (user == null) {
       throw new ForbiddenException('Access Denied');
     }
 
-    if (!bcrypt.compareSync(dto.password, user.hash)) {
+    if (!bcrypt.compareSync(password, user.hash)) {
       throw new ForbiddenException('Access Denied');
     }
+  }
+
+  async setActive(dto: AuthDto, token: string, active: boolean): Promise<User> {
+    const user = await this.userService.getUserByEmail(dto.email);
+
+    this.validateUserData(user, dto.password);
 
     const decodedToken = this.jwtService.decode(token);
     if (decodedToken != null) {
