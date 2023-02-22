@@ -81,17 +81,19 @@ export class AuthService {
   }
 
   async updateActive(email: string, active: boolean): Promise<User> {
-    const deactivatedUser = await this.userService.updateUser(
+    const user = await this.userService.updateUser(
       { email },
       {
         active,
       },
     );
 
-    delete deactivatedUser.hash;
-    delete deactivatedUser.hashedRt;
+    if (!active) {
+      await this.logout(user.id);
+    }
+    delete user.hashedRt;
 
-    return deactivatedUser;
+    return user;
   }
 
   async logout(userId: number): Promise<void> {

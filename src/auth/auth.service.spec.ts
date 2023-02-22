@@ -144,34 +144,61 @@ describe('AuthService', () => {
   });
 
   describe('set account active/inactive', () => {
-    it.each([[false], [true]])(
-      'should succeed if token belongs to same user as the provided email',
-      async (active: boolean) => {
-        const savedUser = await userService.createUser({
-          email: dto.email,
-          hash: await authService.hashData(dto.password),
-        });
+    it('should activate an account', async () => {
+      const savedUser = await userService.createUser({
+        email: dto.email,
+        hash: await authService.hashData(dto.password),
+      });
 
-        const token = await jwtService.signAsync(
-          {
-            sub: savedUser.id,
-            email: savedUser.email,
-          },
-          {
-            secret: configService.get('AT_SECRET'),
-            expiresIn: 60 * 15,
-          },
-        );
+      // save a refresh token since this should not be deleted upon deactivation
+      await userService.updateUser({ email: dto.email }, { hashedRt: 'hello' });
 
-        await authService.setActive(dto, token, active);
+      const token = await jwtService.signAsync(
+        {
+          sub: savedUser.id,
+          email: savedUser.email,
+        },
+        {
+          secret: configService.get('AT_SECRET'),
+          expiresIn: 60 * 15,
+        },
+      );
 
-        const deactivatedUser = await userService.getUserByEmail(
-          savedUser.email,
-        );
+      await authService.setActive(dto, token, true);
 
-        expect(deactivatedUser.active).toBe(active);
-      },
-    );
+      const user = await userService.getUserByEmail(savedUser.email);
+
+      expect(user.active).toBe(true);
+      expect(user.hashedRt).not.toBeNull();
+    });
+
+    it('should logout the user if deactivating the account', async () => {
+      const savedUser = await userService.createUser({
+        email: dto.email,
+        hash: await authService.hashData(dto.password),
+      });
+
+      // save a refresh token since this should be deleted upon deactivation
+      await userService.updateUser({ email: dto.email }, { hashedRt: 'hello' });
+
+      const token = await jwtService.signAsync(
+        {
+          sub: savedUser.id,
+          email: savedUser.email,
+        },
+        {
+          secret: configService.get('AT_SECRET'),
+          expiresIn: 60 * 15,
+        },
+      );
+
+      await authService.setActive(dto, token, false);
+
+      const user = await userService.getUserByEmail(savedUser.email);
+
+      expect(user.active).toBe(false);
+      expect(user.hashedRt).toBe(null);
+    });
 
     it('should throw a ForbiddenException if a token belonging to a different user is provided', async () => {
       const savedUser = await userService.createUser({
