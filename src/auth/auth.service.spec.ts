@@ -125,6 +125,22 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('access_token');
       expect(result).toHaveProperty('refresh_token');
     });
+
+    it('should activate a user account if it is deactivated', async () => {
+      await userService.createUser({
+        email: dto.email,
+        hash: await authService.hashData(dto.password),
+      });
+
+      await authService.updateActive(dto.email, false);
+
+      await authService.signin(dto);
+
+      const user = await userService.getUserByEmail(dto.email);
+
+      expect(user).not.toBeNull();
+      expect(user).toHaveProperty('active', true);
+    });
   });
 
   describe('set account active/inactive', () => {

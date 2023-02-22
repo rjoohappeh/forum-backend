@@ -16,15 +16,16 @@ export class AuthService {
   ) {}
 
   async signup(dto: AuthDto): Promise<Tokens> {
-    const hash = await this.hashData(dto.password);
+    const { email, password } = dto;
+    const hash = await this.hashData(password);
     const createUserDto: CreateUserDto = {
-      email: dto.email,
+      email,
       hash,
     };
     try {
       const newUser = await this.userService.createUser(createUserDto);
 
-      const tokens = await this.getTokens(newUser.id, newUser.email);
+      const tokens = await this.getTokens(newUser.id, email);
       await this.updateRtHash(newUser.id, tokens.refresh_token);
       return tokens;
     } catch (error) {
@@ -36,11 +37,15 @@ export class AuthService {
   }
 
   async signin(dto: AuthDto): Promise<Tokens> {
-    const user = await this.userService.getUserByEmail(dto.email);
+    const { email, password } = dto;
+    const user = await this.userService.getUserByEmail(email);
 
-    this.validateUserData(user, dto.password);
+    this.validateUserData(user, password);
 
-    const tokens = await this.getTokens(user.id, user.email);
+    if (!user.active) {
+      await this.userService.updateUser({ email }, { active: true });
+    }
+    const tokens = await this.getTokens(user.id, email);
     await this.updateRtHash(user.id, tokens.refresh_token);
     return tokens;
   }
@@ -60,15 +65,16 @@ export class AuthService {
   }
 
   async setActive(dto: AuthDto, token: string, active: boolean): Promise<User> {
-    const user = await this.userService.getUserByEmail(dto.email);
+    const { email, password } = dto;
+    const user = await this.userService.getUserByEmail(email);
 
-    this.validateUserData(user, dto.password);
+    this.validateUserData(user, password);
 
     const decodedToken = this.jwtService.decode(token);
     if (decodedToken != null) {
       const tokenEmail = decodedToken['email'];
-      if (dto.email === tokenEmail) {
-        return await this.updateActive(dto.email, active);
+      if (email === tokenEmail) {
+        return await this.updateActive(email, active);
       }
     }
     throw new ForbiddenException('Access Denied');
@@ -102,7 +108,7 @@ export class AuthService {
       this.jwtService.signAsync(
         {
           sub: userId,
-          email: email,
+          email,
         },
         {
           secret: this.config.get('AT_SECRET'),
@@ -112,7 +118,7 @@ export class AuthService {
       this.jwtService.signAsync(
         {
           sub: userId,
-          email: email,
+          email,
         },
         {
           secret: this.config.get('RT_SECRET'),
