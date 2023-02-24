@@ -6,7 +6,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AtGuard } from './auth/guards/at.guard';
-import { UserModule } from './prisma/user/prisma.module';
+import { UserModule } from './prisma/user/user.module';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UserModule } from './prisma/user/prisma.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    PostModule,
   ],
   controllers: [AppController],
   providers: [

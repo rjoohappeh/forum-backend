@@ -18,7 +18,7 @@ export class PrismaService
   }
 
   cleanDb() {
-    return this.$transaction([this.user.deleteMany()]);
+    return this.$transaction([this.post.deleteMany(), this.user.deleteMany()]);
   }
 
   onModuleInit() {
