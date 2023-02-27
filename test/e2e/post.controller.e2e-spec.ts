@@ -80,10 +80,12 @@ describe('Post controller', () => {
 
     it('should return an array containing the posts if some exist', async () => {
       const { id } = await userService.getUserByEmail('fakeUser@email.com');
-      const post = await postService.createPost({
-        authorId: id,
-        message: 'Hello world',
-      });
+      const post = await postService.createPost(
+        {
+          message: 'Hello world',
+        },
+        id,
+      );
 
       return pactum
         .spec()

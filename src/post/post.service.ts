@@ -10,10 +10,11 @@ export class PostService {
     return this.prisma.post.findMany();
   }
 
-  async createPost(dto: CreatePostDto) {
+  async createPost(dto: CreatePostDto, userId: number) {
     return this.prisma.post
       .create({
         data: {
+          authorId: userId,
           ...dto,
         },
       })
