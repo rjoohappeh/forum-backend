@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto';
+import { AuthDto, SignUpDto } from './dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -14,9 +14,10 @@ describe('AuthService', () => {
   let userService: UserService;
   let configService: ConfigService;
 
-  const dto: AuthDto = {
+  const dto: SignUpDto = {
     email: 'test@email.com',
     password: 'test123',
+    displayName: 'fakeDisplayname',
   };
 
   beforeEach(async () => {
@@ -51,6 +52,7 @@ describe('AuthService', () => {
       await userService.createUser({
         email: dto.email,
         hash: dto.password,
+        displayName: 'fakeDisplayname',
       });
 
       await expect(() => authService.signup(dto)).rejects.toThrowError(
@@ -76,6 +78,7 @@ describe('AuthService', () => {
       const savedUser = await userService.createUser({
         email: dto.email,
         hash: dto.password,
+        displayName: 'fakeDisplayname',
       });
 
       const refreshToken = 'fakeToken';
@@ -102,6 +105,7 @@ describe('AuthService', () => {
       await userService.createUser({
         email: dto.email,
         hash: await authService.hashData(dto.password),
+        displayName: 'fakeDisplayname',
       });
 
       const signInDto: AuthDto = {
@@ -118,6 +122,7 @@ describe('AuthService', () => {
       await userService.createUser({
         email: dto.email,
         hash: await authService.hashData(dto.password),
+        displayName: 'fakeDisplayname',
       });
 
       const result = await authService.signin(dto);
@@ -130,6 +135,7 @@ describe('AuthService', () => {
       await userService.createUser({
         email: dto.email,
         hash: await authService.hashData(dto.password),
+        displayName: 'fakeDisplayname',
       });
 
       await authService.updateActive(dto.email, false);
@@ -148,6 +154,7 @@ describe('AuthService', () => {
       const savedUser = await userService.createUser({
         email: dto.email,
         hash: await authService.hashData(dto.password),
+        displayName: 'fakeDisplayname',
       });
 
       // save a refresh token since this should not be deleted upon deactivation
@@ -176,6 +183,7 @@ describe('AuthService', () => {
       const savedUser = await userService.createUser({
         email: dto.email,
         hash: await authService.hashData(dto.password),
+        displayName: 'fakeDisplayname',
       });
 
       // save a refresh token since this should be deleted upon deactivation
@@ -204,6 +212,7 @@ describe('AuthService', () => {
       const savedUser = await userService.createUser({
         email: dto.email,
         hash: await authService.hashData(dto.password),
+        displayName: 'fakeDisplayname',
       });
 
       const token = await jwtService.signAsync(
@@ -228,6 +237,7 @@ describe('AuthService', () => {
       const { id } = await userService.createUser({
         email: dto.email,
         hash: dto.password,
+        displayName: 'fakeDisplayname',
       });
 
       await authService.logout(id);

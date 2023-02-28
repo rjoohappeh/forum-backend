@@ -1,6 +1,10 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AuthDto } from './dto';
+import { AuthDto, SignUpDto } from './dto';
 import { CreateUserDto, Tokens } from '../types';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
@@ -15,12 +19,13 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async signup(dto: AuthDto): Promise<Tokens> {
-    const { email, password } = dto;
+  async signup(dto: SignUpDto): Promise<Tokens> {
+    const { email, password, displayName } = dto;
     const hash = await this.hashData(password);
     const createUserDto: CreateUserDto = {
       email,
       hash,
+      displayName,
     };
     try {
       const newUser = await this.userService.createUser(createUserDto);
@@ -38,16 +43,23 @@ export class AuthService {
 
   async signin(dto: AuthDto): Promise<Tokens> {
     const { email, password } = dto;
-    const user = await this.userService.getUniqueUser({ email });
+    try {
+      const user = await this.userService.getUniqueUser({ email });
 
-    this.validateUserData(user, password);
+      this.validateUserData(user, password);
 
-    if (!user.active) {
-      await this.userService.updateUser({ email }, { active: true });
+      if (!user.active) {
+        await this.userService.updateUser({ email }, { active: true });
+      }
+      const tokens = await this.getTokens(user.id, email);
+      await this.updateRtHash(user.id, tokens.refresh_token);
+      return tokens;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new ForbiddenException('Access Denied');
+      }
+      throw error;
     }
-    const tokens = await this.getTokens(user.id, email);
-    await this.updateRtHash(user.id, tokens.refresh_token);
-    return tokens;
   }
 
   async hashData(data: string): Promise<string> {

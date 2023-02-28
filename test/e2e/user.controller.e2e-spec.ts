@@ -67,6 +67,7 @@ describe('User Controller', () => {
       const user = await userService.createUser({
         email: 'test@email.com',
         hash: 'fakehash',
+        displayName: 'fakeDisplayname',
       });
 
       delete user.hash;

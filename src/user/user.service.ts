@@ -19,17 +19,13 @@ export class UserService {
       throw new NotFoundException(`No user found with ${errorMessage}`);
     }
 
-    delete user.hash;
-    delete user.hashedRt;
-
     return user;
   }
 
   async createUser(dto: CreateUserDto): Promise<User> {
     return this.prisma.user.create({
       data: {
-        email: dto.email,
-        hash: dto.hash,
+        ...dto,
       },
     });
   }

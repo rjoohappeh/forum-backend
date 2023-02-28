@@ -1,6 +1,7 @@
 export type CreateUserDto = {
   email: string;
   hash: string;
+  displayName: string;
 };
 
 export type UpdateUserDto = {

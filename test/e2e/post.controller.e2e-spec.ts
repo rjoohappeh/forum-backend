@@ -64,6 +64,7 @@ describe('Post controller', () => {
       await userService.createUser({
         email: 'fakeUser@email.com',
         hash: 'fakehash',
+        displayName: 'fakeDisplayName',
       });
     });
 
@@ -105,6 +106,7 @@ describe('Post controller', () => {
       await userService.createUser({
         email: 'fakeUser@email.com',
         hash: 'fakehash',
+        displayName: 'fakeDisplayName',
       });
     });
 

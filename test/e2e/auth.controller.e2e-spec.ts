@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import * as pactum from 'pactum';
-import { AuthDto } from '../../src/auth/dto';
+import { AuthDto, SignUpDto } from '../../src/auth/dto';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -50,11 +50,16 @@ describe('AppController (e2e)', () => {
 
   describe('auth', () => {
     describe('signup', () => {
+      const signUpDto: SignUpDto = {
+        ...dto,
+        displayName: 'fakeDisplayname',
+      };
       it('should return 403 when user signs up with email already in use', async () => {
         await prismaService.user.create({
           data: {
             email: dto.email,
             hash: dto.password,
+            displayName: signUpDto.displayName,
           },
         });
 
@@ -67,7 +72,7 @@ describe('AppController (e2e)', () => {
         return pactum
           .spec()
           .post('/auth/signup')
-          .withBody(dto)
+          .withBody(signUpDto)
           .expectBody(expectedBody);
       });
 
@@ -75,7 +80,7 @@ describe('AppController (e2e)', () => {
         return pactum
           .spec()
           .post('/auth/signup')
-          .withBody(dto)
+          .withBody(signUpDto)
           .expectStatus(201)
           .expectBodyContains('access_token')
           .expectBodyContains('refresh_token');
@@ -88,6 +93,7 @@ describe('AppController (e2e)', () => {
           data: {
             email: dto.email,
             hash: await authService.hashData(dto.password),
+            displayName: 'fakeDisplayname',
           },
         });
       });
@@ -148,6 +154,7 @@ describe('AppController (e2e)', () => {
           data: {
             email: dto.email,
             hash: await authService.hashData(dto.password),
+            displayName: 'fakeDisplayname',
           },
         });
       });
@@ -230,6 +237,7 @@ describe('AppController (e2e)', () => {
           data: {
             email: dto.email,
             hash: await authService.hashData(dto.password),
+            displayName: 'fakeDisplayname',
           },
         });
 
