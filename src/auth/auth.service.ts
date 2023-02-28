@@ -5,7 +5,7 @@ import { CreateUserDto, Tokens } from './types';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
-import { UserService } from '../prisma/user/user.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {

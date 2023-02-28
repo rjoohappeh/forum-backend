@@ -6,7 +6,7 @@ import { PostService } from '../../src/post/post.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserService } from '../../src/prisma/user/user.service';
+import { UserService } from '../../src/user/user.service';
 
 describe('Post controller', () => {
   let app: INestApplication;
