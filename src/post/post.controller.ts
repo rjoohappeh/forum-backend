@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { PostService } from './post.service';
-import { CreatePostDto } from './types';
+import { CreatePostDto } from '../types';
 import { GetCurrentUserId } from '../common/decorators';
 
 @Controller('/posts')

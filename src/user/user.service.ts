@@ -5,7 +5,7 @@ import {
   CreateUserDto,
   UpdateUserDto,
   UpdateUserWhereUniqueOptions,
-} from '../auth/types';
+} from '../types';
 
 @Injectable()
 export class UserService {
