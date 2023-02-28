@@ -79,7 +79,9 @@ describe('Post controller', () => {
     });
 
     it('should return an array containing the posts if some exist', async () => {
-      const { id } = await userService.getUserByEmail('fakeUser@email.com');
+      const { id } = await userService.getUniqueUser({
+        email: 'fakeUser@email.com',
+      });
       const post = await postService.createPost(
         {
           message: 'Hello world',
@@ -107,7 +109,9 @@ describe('Post controller', () => {
     });
 
     it('should create a new post when authorId provided exists', async () => {
-      const { id } = await userService.getUserByEmail('fakeUser@email.com');
+      const { id } = await userService.getUniqueUser({
+        email: 'fakeUser@email.com',
+      });
       const body = {
         authorId: id,
         message: 'Hello world',
