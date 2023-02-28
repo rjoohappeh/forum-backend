@@ -136,7 +136,7 @@ describe('AuthService', () => {
 
       await authService.signin(dto);
 
-      const user = await userService.getUserByEmail(dto.email);
+      const user = await userService.getUniqueUser({ email: dto.email });
 
       expect(user).not.toBeNull();
       expect(user).toHaveProperty('active', true);
@@ -166,7 +166,7 @@ describe('AuthService', () => {
 
       await authService.setActive(dto, token, true);
 
-      const user = await userService.getUserByEmail(savedUser.email);
+      const user = await userService.getUniqueUser({ email: savedUser.email });
 
       expect(user.active).toBe(true);
       expect(user.hashedRt).not.toBeNull();
@@ -194,7 +194,7 @@ describe('AuthService', () => {
 
       await authService.setActive(dto, token, false);
 
-      const user = await userService.getUserByEmail(savedUser.email);
+      const user = await userService.getUniqueUser({ email: savedUser.email });
 
       expect(user.active).toBe(false);
       expect(user.hashedRt).toBe(null);

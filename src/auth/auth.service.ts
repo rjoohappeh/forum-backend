@@ -38,7 +38,7 @@ export class AuthService {
 
   async signin(dto: AuthDto): Promise<Tokens> {
     const { email, password } = dto;
-    const user = await this.userService.getUserByEmail(email);
+    const user = await this.userService.getUniqueUser({ email });
 
     this.validateUserData(user, password);
 
@@ -66,7 +66,7 @@ export class AuthService {
 
   async setActive(dto: AuthDto, token: string, active: boolean): Promise<User> {
     const { email, password } = dto;
-    const user = await this.userService.getUserByEmail(email);
+    const user = await this.userService.getUniqueUser({ email });
 
     this.validateUserData(user, password);
 

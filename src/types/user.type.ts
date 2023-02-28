@@ -10,7 +10,7 @@ export type UpdateUserDto = {
   active?: boolean;
 };
 
-export type UpdateUserWhereUniqueOptions = {
+export type UserWhereUniqueOptions = {
   id?: number;
   email?: string;
 };
