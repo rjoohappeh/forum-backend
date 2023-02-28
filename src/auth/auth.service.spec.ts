@@ -52,11 +52,23 @@ describe('AuthService', () => {
       await userService.createUser({
         email: dto.email,
         hash: dto.password,
+        displayName: 'newDisplayName',
+      });
+
+      await expect(() => authService.signup(dto)).rejects.toThrowError(
+        new ForbiddenException('Email already taken'),
+      );
+    });
+
+    it('should not succeed if display name is not unique', async () => {
+      await userService.createUser({
+        email: 'newEmail@email.com',
+        hash: dto.password,
         displayName: 'fakeDisplayname',
       });
 
       await expect(() => authService.signup(dto)).rejects.toThrowError(
-        new ForbiddenException('Credentials Taken'),
+        new ForbiddenException('Display name already taken'),
       );
     });
 

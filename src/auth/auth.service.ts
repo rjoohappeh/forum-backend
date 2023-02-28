@@ -35,7 +35,11 @@ export class AuthService {
       return tokens;
     } catch (error) {
       if (error.code === 'P2002') {
-        throw new ForbiddenException('Credentials Taken');
+        const exceptionMessage =
+          error.meta.target.at(0) === 'displayName'
+            ? 'Display name already taken'
+            : 'Email already taken';
+        throw new ForbiddenException(exceptionMessage);
       }
       throw error;
     }
