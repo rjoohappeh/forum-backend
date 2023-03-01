@@ -14,7 +14,11 @@ export class PostService {
     return this.prisma.post
       .create({
         data: {
-          authorId: userId,
+          author: {
+            connect: {
+              id: userId,
+            },
+          },
           ...dto,
         },
       })
