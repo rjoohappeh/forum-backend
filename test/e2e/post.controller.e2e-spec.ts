@@ -80,15 +80,13 @@ describe('Post controller', () => {
     });
 
     it('should return an array containing the posts if some exist', async () => {
-      const { id } = await userService.getUniqueUser({
+      const { id, displayName } = await userService.getUniqueUser({
         email: 'fakeUser@email.com',
       });
-      const post = await postService.createPost(
-        {
-          message: 'Hello world',
-        },
-        id,
-      );
+      const post = await postService.createPost({
+        message: 'Hello world',
+        authorId: id,
+      });
 
       return pactum
         .spec()
@@ -97,7 +95,14 @@ describe('Post controller', () => {
           Authorization: `Bearer ${token}`,
         })
         .expectStatus(200)
-        .expectBodyContains([post]);
+        .expectBodyContains([
+          {
+            ...post,
+            author: {
+              displayName,
+            },
+          },
+        ]);
     });
   });
 
@@ -114,6 +119,7 @@ describe('Post controller', () => {
       const { id } = await userService.getUniqueUser({
         email: 'fakeUser@email.com',
       });
+
       const body = {
         authorId: id,
         message: 'Hello world',
