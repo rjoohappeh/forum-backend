@@ -65,7 +65,7 @@ describe('AppController (e2e)', () => {
 
         const expectedBody = {
           statusCode: 403,
-          message: 'Credentials Taken',
+          message: 'Email already taken',
           error: 'Forbidden',
         };
 
