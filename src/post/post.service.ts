@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreatePostDto, PostWithAuthor } from '../types';
+import { CreatePostDto, PostWithAuthor, UpdatePostDto } from '../types';
 
 @Injectable()
 export class PostService {
@@ -40,5 +40,17 @@ export class PostService {
       .catch(() => {
         throw new BadRequestException('No user with provided id exists');
       });
+  }
+
+  async updatePost(dto: UpdatePostDto) {
+    return this.prisma.post.updateMany({
+      data: {
+        message: dto.newMessage,
+      },
+      where: {
+        authorId: dto.authorId,
+        createdAt: dto.createdAt,
+      },
+    });
   }
 }

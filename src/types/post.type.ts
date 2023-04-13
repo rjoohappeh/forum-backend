@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreatePostDto {
   @IsNotEmpty()
@@ -7,6 +7,19 @@ export class CreatePostDto {
 
   // TODO: add validation for this parameter and pipe the body value into an int
   authorId: number;
+}
+
+export class UpdatePostDto {
+  @IsNumber()
+  authorId: number;
+
+  @IsNotEmpty()
+  @IsString()
+  newMessage: string;
+
+  @IsNotEmpty()
+  @IsDateString()
+  createdAt: string;
 }
 
 export type PostWithAuthor = {

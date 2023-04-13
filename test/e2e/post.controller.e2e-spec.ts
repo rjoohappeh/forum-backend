@@ -13,6 +13,8 @@ describe('Post controller', () => {
   let prismaService: PrismaService;
   let userService: UserService;
   let postService: PostService;
+  let jwtService: JwtService;
+  let configService: ConfigService;
   let token: string;
 
   beforeAll(async () => {
@@ -37,8 +39,8 @@ describe('Post controller', () => {
     postService = app.get<PostService>(PostService);
     userService = app.get<UserService>(UserService);
 
-    const jwtService = app.get<JwtService>(JwtService);
-    const configService = app.get<ConfigService>(ConfigService);
+    jwtService = app.get<JwtService>(JwtService);
+    configService = app.get<ConfigService>(ConfigService);
     token = await jwtService.signAsync(
       {
         sub: 999,
@@ -150,6 +152,69 @@ describe('Post controller', () => {
           Authorization: `Bearer ${token}`,
         })
         .expectStatus(400);
+    });
+  });
+
+  describe('update post', () => {
+    let post;
+    beforeEach(async () => {
+      const user = await userService.createUser({
+        email: 'fakeUser@email.com',
+        hash: 'fakehash',
+        displayName: 'fakeDisplayName',
+      });
+      post = await postService.createPost({
+        message: 'hello message',
+        authorId: user.id,
+      });
+
+      token = await jwtService.signAsync(
+        {
+          sub: user.id,
+          email: user.email,
+        },
+        {
+          secret: configService.get('AT_SECRET'),
+          expiresIn: 60 * 15,
+        },
+      );
+    });
+
+    it('should return 400 status if userId does not match the userId in the accessToken', async () => {
+      const body = {
+        authorId: -1,
+        createdAt: post.createdAt,
+        newMessage: 'a new message',
+      };
+
+      return pactum
+        .spec()
+        .patch('/posts')
+        .withBody(body)
+        .withHeaders({
+          Authorization: `Bearer ${token}`,
+        })
+        .expectStatus(400);
+    });
+
+    it('should update the post and return a 200 status if a post exists with the information provided', async () => {
+      const body = {
+        authorId: post.authorId,
+        createdAt: post.createdAt,
+        newMessage: 'a new message',
+      };
+
+      return pactum
+        .spec()
+        .patch('/posts')
+        .withBody(body)
+        .withHeaders({
+          Authorization: `Bearer ${token}`,
+        })
+        .expectStatus(200)
+        .expectBody({
+          count: 1,
+        });
     });
   });
 });
