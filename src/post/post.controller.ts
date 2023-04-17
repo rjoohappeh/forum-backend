@@ -2,7 +2,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
+  ParseIntPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -32,5 +35,10 @@ export class PostController {
       );
     }
     return this.postService.updatePost(dto);
+  }
+
+  @Delete('/:id')
+  deletePost(@Param('id', ParseIntPipe) postId: number) {
+    return this.postService.deletePost(postId);
   }
 }

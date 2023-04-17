@@ -53,4 +53,15 @@ export class PostService {
       },
     });
   }
+
+  async deletePost(postId: number) {
+    return this.prisma.post.delete({
+      where: {
+        id: postId,
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
 }

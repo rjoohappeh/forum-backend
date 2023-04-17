@@ -217,4 +217,32 @@ describe('Post controller', () => {
         });
     });
   });
+
+  describe('delete post', () => {
+    let post;
+    beforeEach(async () => {
+      const user = await userService.createUser({
+        email: 'fakeUser@email.com',
+        hash: 'fakehash',
+        displayName: 'fakeDisplayName',
+      });
+      post = await postService.createPost({
+        message: 'hello message',
+        authorId: user.id,
+      });
+    });
+
+    it('should delete the post if one is found with the given id', async () => {
+      return pactum
+        .spec()
+        .delete(`/posts/${post.id}`)
+        .withHeaders({
+          Authorization: `Bearer ${token}`,
+        })
+        .expectStatus(200)
+        .expectBody({
+          id: post.id,
+        });
+    });
+  });
 });
