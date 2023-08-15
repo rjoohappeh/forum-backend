@@ -41,4 +41,9 @@ export class PostController {
   deletePost(@Param('id', ParseIntPipe) postId: number) {
     return this.postService.deletePost(postId);
   }
+
+  @Get('/user/:displayName')
+  getPostsByDisplayName(@Param('displayName') displayName: string) {
+    return this.postService.getPostsByDisplayName(displayName);
+  }
 }

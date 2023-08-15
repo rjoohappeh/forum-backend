@@ -245,4 +245,30 @@ describe('Post controller', () => {
         });
     });
   });
+
+  describe('get posts by user display name', () => {
+    let user;
+    beforeEach(async () => {
+      user = await userService.createUser({
+        email: 'fakeUser@email.com',
+        hash: 'fakehash',
+        displayName: 'fakeDisplayName',
+      });
+      await postService.createPost({
+        message: 'hello message',
+        authorId: user.id,
+      });
+    });
+
+    it('should return all posts created by a user', async () => {
+      return pactum
+        .spec()
+        .get(`/posts/user/${user.displayName}`)
+        .withHeaders({
+          Authorization: `Bearer ${token}`,
+        })
+        .expectStatus(200)
+        .expectBodyContains('hello message');
+    });
+  });
 });

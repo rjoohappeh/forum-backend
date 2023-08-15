@@ -64,4 +64,21 @@ export class PostService {
       },
     });
   }
+
+  async getPostsByDisplayName(displayName: string) {
+    return this.prisma.post.findMany({
+      where: {
+        author: {
+          displayName,
+        },
+      },
+      include: {
+        author: {
+          select: {
+            displayName: true,
+          },
+        },
+      },
+    });
+  }
 }
